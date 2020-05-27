@@ -16,6 +16,9 @@ class HashTable:
 
     Implement this.
     """
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.storage = [None] * capacity
 
     def fnv1(self, key):
         """
@@ -25,11 +28,10 @@ class HashTable:
         """
 
     def djb2(self, key):
-        """
-        DJB2 32-bit hash function
-
-        Implement this, and/or FNV-1.
-        """
+        hash = 5381
+        for c in key:
+            hash = (hash * 33) + ord(c)
+        return hash
 
     def hash_index(self, key):
         """
@@ -40,31 +42,51 @@ class HashTable:
         return self.djb2(key) % self.capacity
 
     def put(self, key, value):
-        """
-        Store the value with the given key.
-
-        Hash collisions should be handled with Linked List Chaining.
-
-        Implement this.
-        """
+        index = self.hash_index(key) 
+        node = self.storage[index]
+        if node is None: #its open
+            self.storage[index] = HashTableEntry(key, value)
+        else:
+            if node.key != key: #if we aren't overwriting
+                while node.next is not None: #while we can go right
+                    if node.key != key: #still not overwriting
+                        node = node.next
+                    else:
+                        node.value = value # place the val
+            else:
+                node.value = value
+                    
 
     def delete(self, key):
-        """
-        Remove the value stored with the given key.
+        if self.get(key) is not None: #item to del is found
+            index = self.hash_index(key)
+            node = self.storage[index]
+            while node.next is not None:
+                if node.key == key:
+                    node.key = node.next.key
+                    node.value = node.next.next
+                    return
+                else: # keep looking
+                    node = node.next
+            if node.key == key: #item is end of ll
+                node.key = None
+                node.value = None
+                node.next = None
+        return None
 
-        Print a warning if the key is not found.
-
-        Implement this.
-        """
 
     def get(self, key):
-        """
-        Retrieve the value stored with the given key.
-
-        Returns None if the key is not found.
-
-        Implement this.
-        """
+        index = self.hash_index(key)
+        node = self.storage[index]
+        if node is not None: #not empty
+            while node.next is not None: #we have room to move right
+                if node.key == key: #found it
+                    return node.value
+                else: #keep looking
+                    node = node.next
+            if node.key == key: # if head
+                return node.value
+        return None
 
     def resize(self):
         """
