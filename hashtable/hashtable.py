@@ -21,11 +21,12 @@ class HashTable:
         self.storage = [None] * capacity
 
     def fnv1(self, key):
-        """
-        FNV-1 64-bit hash function
-
-        Implement this, and/or DJB2.
-        """
+        fnvPrime = 2**40 + 2**8 + 0xb3 # 64 bit prime
+        hash = 14695981039346656037 #offset basis
+        for i in key:
+            hash = hash * fnvPrime
+            hash = hash ^ ord(i)
+        return hash & 0xFFFFFFFFFFFFFFFF
 
     def djb2(self, key):
         hash = 5381
@@ -38,24 +39,19 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
-        return self.djb2(key) % self.capacity
+        return self.fnv1(key) % self.capacity
+        #return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         index = self.hash_index(key) 
+        
         node = self.storage[index]
         if node is None: #its open
             self.storage[index] = HashTableEntry(key, value)
+            self.storage[index].next = node
         else:
-            if node.key != key: #if we aren't overwriting
-                while node.next is not None: #while we can go right
-                    if node.key != key: #still not overwriting
-                        node = node.next
-                    else:
-                        node.value = value # place the val
-            else:
-                node.value = value
-                    
+            self.storage[index] = HashTableEntry(key, value)
+                   
 
     def delete(self, key):
         if self.get(key) is not None: #item to del is found
@@ -68,7 +64,7 @@ class HashTable:
                     return
                 else: # keep looking
                     node = node.next
-            if node.key == key: #item is end of ll
+            if node.key == key: #item is end of list
                 node.key = None
                 node.value = None
                 node.next = None
