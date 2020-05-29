@@ -39,58 +39,55 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        return self.fnv1(key) % self.capacity
-        #return self.djb2(key) % self.capacity
+        #return self.fnv1(key) % self.capacity
+        return self.djb2(key) % self.capacity
 
     def put(self, key, value):
-        index = self.hash_index(key) 
-        
+        index = self.hash_index(key)
+        hstEntry = HashTableEntry(key, value)
         node = self.storage[index]
-        if node is None: #its open
-            self.storage[index] = HashTableEntry(key, value)
+
+        if node is not None:
+            self.storage[index] = hstEntry
             self.storage[index].next = node
         else:
-            self.storage[index] = HashTableEntry(key, value)
-                   
+            self.storage[index] = hstEntry
 
     def delete(self, key):
-        if self.get(key) is not None: #item to del is found
-            index = self.hash_index(key)
-            node = self.storage[index]
-            while node.next is not None:
-                if node.key == key:
-                    node.key = node.next.key
-                    node.value = node.next.next
-                    return
-                else: # keep looking
-                    node = node.next
-            if node.key == key: #item is end of list
-                node.key = None
-                node.value = None
-                node.next = None
-        return None
+        
+        index = self.hash_index(key)
+        node = self.storage[index]
+        prev = None
+        
 
+        if node.key == key:
+            self.storage[index] = node.next
+            return 
+        
+        while node != None:
+            if node.key == key:
+                prev.next = node.next
+                self.storage[index].next = None
+                return 
+            
+            prev = node
+            node = node.next
+        return
 
     def get(self, key):
         index = self.hash_index(key)
         node = self.storage[index]
-        if node is not None: #not empty
-            while node.next is not None: #we have room to move right
-                if node.key == key: #found it
+
+        if node is not None: 
+            while node: 
+                if node.key == key: 
                     return node.value
-                else: #keep looking
-                    node = node.next
-            if node.key == key: # if head
-                return node.value
-        return None
+                node = node.next
+        return node
 
     def resize(self):
-        """
-        Doubles the capacity of the hash table and
-        rehash all key/value pairs.
-
-        Implement this.
-        """
+        self.storage = self.storage + [None] * self.capacity
+        return self.storage
 
 if __name__ == "__main__":
     ht = HashTable(2)
